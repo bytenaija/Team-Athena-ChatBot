@@ -27,6 +27,7 @@ $(document).ready(function () {
         const answer = $("#answer").val().trim().toLowerCase();
         const old_question = $('.question').last().text().trim();
 
+
         if (answer.length) {
             $("#answer").val('');
             printAnswer(answer);
@@ -48,6 +49,19 @@ $(document).ready(function () {
  * @param {string} answer 
  */
 function determineQuestion(old_question, answer) {
+    if(old_question.includes('travel')){
+        return getTravelInfo(answer)
+    }
+
+
+    if(old_question.includes("Ok, which country would you like to know about?")){
+        return getCountryInformation(answer)
+    }
+
+    if(answer.includes('travel')){
+        return getTravelInfo('yes')
+    }
+
 
     if (old_question.includes(questionsDataSet[0].old)) {
         return getNameQuestion(answer);
@@ -134,6 +148,23 @@ function getLocationQuestion(answer) {
         return printQuestion(questionsDataSet[2].old);
     }
     return printQuestion('come on buddy i just want to know you better &#128526;. please confirm are you from' + getCountry() + ' ?');
+}
+
+function getTravelInfo(answer){
+    if(positiveResponse.includes(answer))   return printQuestion('Ok, which country would you like to know about?');
+
+    return printQuestion('Oh, I am sorry you are not interested')
+}
+function getCountryInformation(answer){
+    const url = `https://cors-anywhere.herokuapp.com/http://timbu.com/${answer}`;
+    const data = getTimbuTravelInfo(url)
+    let info = $.parseHTML(data);
+    if(info.length === 0){
+        return printQuestion(`I currently do not have information about ${answer}. Type 'travel' again to try another country`);
+    }
+    let final = $(info).find('.lp-popular').html()
+    printQuestion(final)
+    return printQuestion(`Find more information about ${answer} at <a href="http://timbu.com/${answer}">http://timbu.com/${answer}</a>`)
 }
 
 
@@ -250,6 +281,20 @@ function basicRequest(url) {
         type: 'GET',
         async: false,
     }).done(function (response) {
+        console.log("response", response)
+        data = response;
+    });
+    return data;
+}
+
+function getTimbuTravelInfo(url) {
+    let data = null;
+    $.ajax({
+        url: url,
+        type: 'GET',
+        async: false,
+    }).done(function (response) {
+        console.log("response", response)
         data = response;
     });
     return data;
@@ -27042,5 +27087,9 @@ var questionsDataSet = [
     {
         "old": "what would you say you do here",
         "new": "I'm here to answer your questions and help out."
+    },
+    {
+        "old": "Would you like to travel?",
+        "new": "Ok, which country would you like to travel to?"
     }
 ];
